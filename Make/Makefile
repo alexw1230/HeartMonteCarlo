@@ -10,7 +10,7 @@ TESTS = tests
 BUILD = build
 OBJS  = $(BUILD)/main.o $(BUILD)/decomp.o
 
-#MPI driver (main.c + decomp.c come in steps 4-6)
+#MPI driver (main.c comes in steps 5-6)
 heart: $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
@@ -24,11 +24,16 @@ $(BUILD)/main.o:   $(SRC)/main.c $(SRC)/heart.h $(SRC)/rng.h $(SRC)/decomp.h
 $(BUILD)/decomp.o: $(SRC)/decomp.c $(SRC)/decomp.h $(SRC)/heart.h
 
 #Serial tests, no MPI needed
-test: $(BUILD)/tests
+test: $(BUILD)/tests $(BUILD)/decomp_tests
 	./$(BUILD)/tests
+	./$(BUILD)/decomp_tests
 
 $(BUILD)/tests: $(TESTS)/tests.c $(SRC)/heart.h $(SRC)/rng.h | $(BUILD)
 	$(TESTCC) $(CFLAGS) -I$(SRC) -o $@ $< $(LDLIBS)
+
+#decomp.c compiled straight in with gcc, separate from the mpicc objects
+$(BUILD)/decomp_tests: $(TESTS)/decomp_tests.c $(SRC)/decomp.c $(SRC)/decomp.h $(SRC)/heart.h $(SRC)/rng.h | $(BUILD)
+	$(TESTCC) $(CFLAGS) -I$(SRC) -o $@ $(TESTS)/decomp_tests.c $(SRC)/decomp.c $(LDLIBS)
 
 clean:
 	rm -rf heart $(BUILD)
