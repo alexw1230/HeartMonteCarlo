@@ -1,0 +1,36 @@
+#Run from repo root: make -f Make/Makefile [heart|test|clean]
+
+CC      = mpicc
+TESTCC  = gcc
+CFLAGS  = -O3 -march=native -std=c11 -Wall -Wextra
+LDLIBS  = -lm
+
+SRC   = src
+TESTS = tests
+BUILD = build
+OBJS  = $(BUILD)/main.o $(BUILD)/decomp.o
+
+#MPI driver (main.c + decomp.c come in steps 4-6)
+heart: $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
+
+$(BUILD)/%.o: $(SRC)/%.c | $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD):
+	mkdir -p $@
+
+$(BUILD)/main.o:   $(SRC)/main.c $(SRC)/heart.h $(SRC)/rng.h $(SRC)/decomp.h
+$(BUILD)/decomp.o: $(SRC)/decomp.c $(SRC)/decomp.h $(SRC)/heart.h
+
+#Serial tests, no MPI needed
+test: $(BUILD)/tests
+	./$(BUILD)/tests
+
+$(BUILD)/tests: $(TESTS)/tests.c $(SRC)/heart.h $(SRC)/rng.h | $(BUILD)
+	$(TESTCC) $(CFLAGS) -I$(SRC) -o $@ $< $(LDLIBS)
+
+clean:
+	rm -rf heart $(BUILD)
+
+.PHONY: test clean
