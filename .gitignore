@@ -1,0 +1,9 @@
+*.out
+*.err
+results/*
+!results/.gitkeep
+!results/final_2442497/
+heart
+build/
+*.o
+__pycache__/
